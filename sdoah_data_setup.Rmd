@@ -3,7 +3,13 @@
 
 ### Load headwaters package
 ```{r}
-load_all(pkg = "C:/ALR/Models/headwaters")
+library(devtools)
+install_github(repo = "headwaters", username = "anarosner")
+library(headwaters)
+
+sessionInfo()
+# load_all(pkg = "C:/ALR/Models/headwaters")
+
 ```
 
 ### Shenandoah files
@@ -94,6 +100,13 @@ w.matrices <- weather.retrieve(gages.spatial=g.spatial, periods=c("seasonal","an
 
 ```
 
+
+###Footnotes
+```{r}
+
+print(sessionInfo()) 
+
+```
 
 
 ###Junk
