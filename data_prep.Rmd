@@ -1,0 +1,147 @@
+---
+output:
+  html_document:
+    css: C:/Users/arosner/Desktop/custom2.css
+    fig_height: 8
+    fig_width: 12
+    self_contained: yes
+    theme: null
+---
+# Setting up data using headwaters package
+## Shenandoah example
+## ALR 2014-8-7
+
+### Load headwaters package
+```{r load pkg}
+library(devtools)
+install_github(repo = "headwaters", username = "anarosner")
+library(headwaters)
+
+
+```
+
+###Temporarily, load datat that will later on be contained in package data
+```{r temp to load pkg data}
+
+#Everything in the package's data dir *should* load using load_all, or explicitly using load_data.  
+#But, that's not working yet... this is a temp fix
+setwd("C:/ALR/Models/headwaters")
+for (i in list.files(path = "./data"))
+     load(file.path("data",i), verbose = T )
+
+```
+
+
+### Specify file locations
+```{r file locations}
+model.dir<-"C:/ALR/Models/headwaters_sdoah"
+buffer.file<-"park_coast_buffer"
+# buffer<-readShapePoly(file.path(model.dir,"sdoah_inputs",buffer.file))
+catchment.file<-"C:/ALR/Data/StreamData/NHDplus/NHDPlusCatchment/sdoah/Catchment"
+```
+
+### Load flow gages
+```{r load gages, cache=TRUE}
+#Retrieve gages
+g.spatial<-gage.retrieve(buffer.file = file.path(model.dir,"sdoah_inputs",buffer.file),temp.dir = file.path(model.dir,"temp"),log.dir = file.path(model.dir,"logs") )
+
+#Plot gages
+plot(g.spatial,col="red",pch=16)
+# plot(buffer,add=T,border="red")
+plot(states.spatial,add=T)
+
+#Place gages into NHDplus catchments
+g.spatial<-gage.place.nhdplus(gages.spatial = g.spatial, catchment.file = catchment.file)
+
+#Trace dams upstream
+#   (not using basin characteristics impoundments, because don't have that processed for sdoah)
+g.spatial<-gage.trace.dams(gages.spatial = g.spatial)
+nrow(g.spatial) #number including dams
+g.spatial<-gage.filter.dams(gages.spatial = g.spatial)
+nrow(g.spatial) #number excluding dams
+plot(g.spatial,col="blue",pch=16, add=T)
+
+#Load basin characteristics
+g.spatial<-gage.load.char(gages.spatial = g.spatial, basin.char.file = file.path(model.dir,"sdoah_inputs","shenandoahUpstreamStats2.RData"))
+
+
+#Place gages into weather grid polygons 
+g.spatial<-gage.place.weather.grid( gages.spatial=g.spatial, plot=T )
+
+#View sample of gage info
+head(g.spatial@data[!is.na(g.spatial$forest),])
+
+```
+
+```{r junk, eval=FALSE, echo=FALSE, results='hide'}
+#Housekeeping
+rm(catchments, plusflow)
+gc(verbose = T)
+
+```
+
+
+
+### Load flow observations
+```{r load flow, cache=TRUE}
+
+#Limit to gages that have basin data for sdoah
+#  as it turns out, only 3 gages have basin info, so it should make for a nice, quick demonstration
+g.spatial<-g.spatial[!is.na(g.spatial$forest),]
+
+
+#Load/calculate/aggregate flow data for seasonal and annual timesteps
+q.matrices<-flow.retrieve( gages.spatial = g.spatial, 
+                          periods = c("seasonal","annual"), log.dir = file.path(model.dir,"logs") )
+
+#View sample of flow data
+tail(q.matrices[["seasonal"]][,1,])
+tail(q.matrices[["season"]][,,1])
+tail(q.matrices[["annual"]][,,1])
+
+```
+
+###Create weather grid polygons from file contents
+```{r create weather grid}
+#Will only need to do this very occassionally, when adding a new geographic region,
+#    and it takes a while
+#    so I'm going to skip it for this markdown
+# weather.grid.poly <- weather.grid.create( regions=c("east","ohio") )
+```
+
+
+### Load weather observations
+```{r load weather observations, cache=TRUE}
+
+
+#Load/calculate/aggregate weather data for seasonal and annual timesteps
+w.matrices <- weather.retrieve(gages.spatial=g.spatial, periods=c("seasonal","annual"))
+
+
+tail(w.matrices[["seasonal"]][,1,])
+tail(w.matrices[["seasonal"]][,,1])
+tail(w.matrices[["annual"]][,,1])
+
+```
+
+### Merge gage (basin char and drainage area), flow, and weather
+```{r merge and melt basin weather and flow into 2d format for use by models}
+#Next and last thing for data prep to add to package...
+```
+
+
+###Footnotes, take a look at r version and packages used
+```{r sessionInfo}
+
+print(sessionInfo()) 
+
+```
+
+
+###Footnotes, look at inventory of objects created
+```{r lsobjects}
+
+ls.objects()
+
+```
+
