@@ -3,7 +3,7 @@ output:
   html_document:
     css: C:/Users/arosner/Desktop/custom2.css
     fig_height: 8
-    fig_width: 12
+    fig_width: 10
     self_contained: yes
     theme: null
 ---
@@ -13,10 +13,10 @@ output:
 
 ### Load headwaters package
 ```{r load pkg}
+
 library(devtools)
 install_github(repo = "headwaters", username = "anarosner")
 library(headwaters)
-
 
 ```
 
@@ -95,9 +95,10 @@ q.matrices<-flow.retrieve( gages.spatial = g.spatial,
                           periods = c("seasonal","annual"), log.dir = file.path(model.dir,"logs") )
 
 #View sample of flow data
-tail(q.matrices[["seasonal"]][,1,])
-tail(q.matrices[["season"]][,,1])
-tail(q.matrices[["annual"]][,,1])
+q.matrices[["seasonal"]][30:40,3,]
+q.matrices[["seasonal"]][30:40,,1]
+q.matrices[["seasonal"]][130:140,,1]
+q.matrices[["annual"]][25:40,,1]
 
 ```
 
